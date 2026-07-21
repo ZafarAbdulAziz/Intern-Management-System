@@ -12,11 +12,19 @@ async function request(path, token, options = {}) {
   if (res.status === 401) {
     localStorage.removeItem('ims_token')
     window.location.href = '/login'
-    return
+    const errorPayload = { detail: 'Unauthorized' }
+    throw new Error(JSON.stringify(errorPayload))
   }
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(JSON.stringify(err))
+    let errBody = null
+    let text = ''
+    try {
+      errBody = await res.json()
+    } catch (_error) {
+      text = await res.text().catch(() => '')
+    }
+    const errorPayload = errBody || text || { status: res.status }
+    throw new Error(JSON.stringify(errorPayload))
   }
   if (res.status === 204) return null
   return res.json()
@@ -27,6 +35,7 @@ export const loginApi = (username, password) =>
   request('/token/', null, { method: 'POST', body: JSON.stringify({ username, password }) })
 
 export const getMe = (token) => request('/auth/me/', token)
+export const changePassword = (token, data) => request('/auth/password/', token, { method: 'POST', body: JSON.stringify(data) })
 export const getManagers = (token) => request('/managers/', token)
 export const createManager = (token, data) => request('/managers/', token, { method: 'POST', body: JSON.stringify(data) })
 export const deleteManager = (token, id) => request(`/managers/${id}/`, token, { method: 'DELETE' })

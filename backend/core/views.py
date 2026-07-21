@@ -9,7 +9,7 @@ from .models import (
     Evaluation, OffboardingChecklist, ConversionDecision
 )
 from .serializers import (
-    UserSerializer, UserRegisterSerializer,
+    UserSerializer, UserRegisterSerializer, ChangePasswordSerializer,
     PositionSerializer, ApplicationSerializer,
     InternSerializer, OnboardingChecklistSerializer,
     DocumentSerializer, TaskSerializer,
@@ -36,6 +36,19 @@ class MeView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user, context={'request': request})
         return Response(serializer.data)
+
+
+class ChangePasswordView(APIView):
+    """Allow an authenticated user to update their password."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+        return Response({'detail': 'Password updated successfully.'}, status=status.HTTP_200_OK)
 
 
 class ManagerListView(generics.ListCreateAPIView):

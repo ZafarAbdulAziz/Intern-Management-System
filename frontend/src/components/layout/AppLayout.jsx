@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useEffect, useRef, useState } from 'react'
 
 const adminNav = [
   { to: '/admin/dashboard',    label: 'Dashboard' },
@@ -35,7 +36,21 @@ export default function AppLayout() {
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '??'
 
+  const [open, setOpen] = useState(false)
+  const menuRef = useRef(null)
+
   const handleLogout = () => { logout(); navigate('/login') }
+  const toggleMenu = () => setOpen(prev => !prev)
+
+  useEffect(() => {
+    const onClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
 
   return (
     <div style={styles.shell}>
@@ -60,7 +75,7 @@ export default function AppLayout() {
           ))}
         </nav>
 
-        <div style={styles.sidebarFooter}>
+        <div style={styles.sidebarFooter} ref={menuRef}>
           <div style={styles.userChip}>
             <div style={styles.avatar}>{initials}</div>
             <div>
@@ -68,7 +83,25 @@ export default function AppLayout() {
               <div style={styles.userRole}>{user?.role}</div>
             </div>
           </div>
-          <button onClick={handleLogout} style={styles.logoutBtn}>Sign out</button>
+
+          <button onClick={toggleMenu} style={styles.settingsBtn} aria-haspopup="true" aria-expanded={open}>
+            <span style={styles.settingsIcon}>⚙︎</span>
+            Settings
+          </button>
+
+          {open && (
+            <div style={styles.menu}>
+              <button style={styles.menuItem} onClick={() => { navigate('settings/profile-picture'); setOpen(false) }}>
+                Change profile picture
+              </button>
+              <button style={styles.menuItem} onClick={() => { navigate('settings/password'); setOpen(false) }}>
+                Change password
+              </button>
+              <button style={styles.menuItem} onClick={handleLogout}>
+                Log out
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -110,10 +143,22 @@ const styles = {
   },
   userName: { fontSize: 13, fontWeight: 600, color: '#0F172A' },
   userRole: { fontSize: 11, color: '#94A3B8' },
-  logoutBtn: {
-    width: '100%', padding: '7px 0', borderRadius: 8, border: '1px solid #E2E8F0',
+  settingsBtn: {
+    width: '100%', padding: '8px 12px', borderRadius: 10, border: '1px solid #E2E8F0',
     background: '#fff', color: '#475569', fontSize: 13, fontWeight: 500,
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
     cursor: 'pointer',
+  },
+  settingsIcon: {
+    fontSize: 15,
+  },
+  menu: {
+    marginTop: 10, borderRadius: 12, border: '1px solid #E2E8F0', background: '#fff',
+    boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)', overflow: 'hidden',
+  },
+  menuItem: {
+    width: '100%', textAlign: 'left', padding: '12px 14px', border: 'none',
+    background: 'transparent', color: '#0F172A', fontSize: 14, cursor: 'pointer',
   },
   main: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
   content: { flex: 1, overflowY: 'auto', padding: 28, background: '#F8FAFC' },

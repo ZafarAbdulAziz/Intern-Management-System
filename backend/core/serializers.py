@@ -6,9 +6,7 @@ from .models import (
 )
 
 
-# ─────────────────────────────────────────────
 # USER
-# ─────────────────────────────────────────────
 
 class UserSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
@@ -18,7 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'name', 'email', 'role', 'intern_count', 'assigned_interns']
-        # role is read-only for non-admins — enforced in views/permissions
+        # role is read-only for managers and interns
         read_only_fields = ['role', 'intern_count', 'assigned_interns']
 
     def get_name(self, obj):
@@ -48,6 +46,23 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True, required=True)
+    new_password = serializers.CharField(write_only=True, required=True)
+    confirm_password = serializers.CharField(write_only=True, required=True)
+
+    def validate_current_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError('Current password is incorrect.')
+        return value
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': 'New passwords do not match.'})
+        return attrs
 
 
 # ─────────────────────────────────────────────

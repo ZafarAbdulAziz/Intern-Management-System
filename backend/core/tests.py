@@ -56,6 +56,49 @@ class AuthTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data['username'], 'admin')
 
+    def test_user_can_change_password(self):
+        token = self.get_token('admin')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+        res = self.client.post('/api/auth/password/', {
+            'current_password': 'pass',
+            'new_password': 'NewPass123!',
+            'confirm_password': 'NewPass123!',
+        }, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['detail'], 'Password updated successfully.')
+
+        self.client.credentials(HTTP_AUTHORIZATION='')
+        login_res = self.client.post('/api/token/', {'username': 'admin', 'password': 'NewPass123!'})
+        self.assertEqual(login_res.status_code, status.HTTP_200_OK)
+
+    def test_password_change_rejects_wrong_current_password(self):
+        token = self.get_token('admin')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+        res = self.client.post('/api/auth/password/', {
+            'current_password': 'wrongpass',
+            'new_password': 'NewPass123!',
+            'confirm_password': 'NewPass123!',
+        }, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(res.data['current_password'][0], 'Current password is incorrect.')
+
+    def test_password_change_rejects_mismatched_passwords(self):
+        token = self.get_token('admin')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+        res = self.client.post('/api/auth/password/', {
+            'current_password': 'pass',
+            'new_password': 'NewPass123!',
+            'confirm_password': 'Mismatch123!',
+        }, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(res.data['confirm_password'][0], 'New passwords do not match.')
+
     def test_admin_can_create_manager_and_view_manager_intern_counts(self):
         token = self.get_token('admin')
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')

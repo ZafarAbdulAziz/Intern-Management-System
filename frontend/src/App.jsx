@@ -25,6 +25,10 @@ import InternOnboarding from './pages/intern/MyOnboarding'
 import InternTasks      from './pages/intern/MyTasks'
 import InternEvaluations from './pages/intern/MyEvaluation'
 
+// Settings
+import ProfilePictureSettings from './pages/settings/ProfilePicture'
+import ChangePassword from './pages/settings/ChangePassword'
+
 // Layout
 import AppLayout from './components/layout/AppLayout'
 
@@ -67,6 +71,10 @@ export default function App() {
             <Route path="onboarding"   element={<AdminOnboarding />} />
             <Route path="evaluations"  element={<AdminEvaluations />} />
             <Route path="offboarding"  element={<AdminOffboarding />} />
+            <Route path="settings">
+              <Route path="profile-picture" element={<ProfilePictureSettings />} />
+              <Route path="password" element={<ChangePassword />} />
+            </Route>
           </Route>
 
           {/* Manager routes */}
@@ -78,6 +86,10 @@ export default function App() {
             <Route path="interns"     element={<ManagerInterns />} />
             <Route path="tasks"       element={<ManagerTasks />} />
             <Route path="evaluations" element={<ManagerEvaluations />} />
+            <Route path="settings">
+              <Route path="profile-picture" element={<ProfilePictureSettings />} />
+              <Route path="password" element={<ChangePassword />} />
+            </Route>
           </Route>
 
           {/* Intern routes */}
@@ -90,6 +102,10 @@ export default function App() {
             <Route path="onboarding"  element={<InternOnboarding />} />
             <Route path="tasks"       element={<InternTasks />} />
             <Route path="evaluations" element={<InternEvaluations />} />
+            <Route path="settings">
+              <Route path="profile-picture" element={<ProfilePictureSettings />} />
+              <Route path="password" element={<ChangePassword />} />
+            </Route>
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
